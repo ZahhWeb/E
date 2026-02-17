@@ -1,6 +1,6 @@
 // src/components/Hero.jsx
 import React, { useState, useEffect } from 'react';
-import api from './api.js'; // Hanya pakai api.js
+import api from './api.js';
 import '../index.css';
 import background from "../assets/images-75.jpeg";
 import genz from "../assets/genz.jpeg";
@@ -16,51 +16,38 @@ function Hero() {
   const [textLogo, setTextLogo] = useState("");
   const [textDataLogo, setTextDataLogo] = useState("");
 
-  const ubahBackgrount = (e) => {
-    setBackImage(e.target.files[0]);
-  };
-
-  const ubahLogo = (e) => {
-    setHeroLogoImg(e.target.files[0]);
-  };
+  const ubahBackgrount = (e) => setBackImage(e.target.files[0]);
+  const ubahLogo = (e) => setHeroLogoImg(e.target.files[0]);
 
   const upload_backgrount = () => {
     if (!backImage || loadingBg) return;
-
     setLoadingBg(true);
 
     const data = new FormData();
     data.append("image", backImage);
 
     api.post("/upload_hero", data)
-      .then((res) => {
+      .then(() => {
         alert("Berhasil update background!");
         setHeroImage(api.defaults.baseURL + "/hero_image?" + Date.now());
       })
-      .catch((err) => {
-        console.error(err);
-        alert("Upload gagal!");
-      })
+      .catch(() => alert("Upload gagal!"))
       .finally(() => setLoadingBg(false));
   };
 
   const upload_Logo = () => {
     if (!heroLogoImg || loadingLogo) return;
-
     setLoadingLogo(true);
 
     const data = new FormData();
     data.append("image", heroLogoImg);
 
     api.post("/upload_hero_logo", data)
-      .then((res) => {
+      .then(() => {
         alert("Berhasil update logo!");
         setHeroImageLogo(api.defaults.baseURL + "/hero_image_logo?" + Date.now());
       })
-      .catch((err) => {
-        console.error(err);
-        alert("Upload gagal!");
-      })
+      .catch(() => alert("Upload gagal!"))
       .finally(() => setLoadingLogo(false));
   };
 
@@ -70,29 +57,34 @@ function Hero() {
       .then(() => {
         alert("Berhasil disimpan");
         setTextDataLogo(textLogo);
+        localStorage.setItem("textLogoHero", textLogo); // simpan di localStorage
         setTextLogo("");
       })
       .catch(() => alert("Gagal simpan text"));
   };
 
-  // Ambil gambar dan text saat pertama kali load
   useEffect(() => {
     setHeroImage(api.defaults.baseURL + "/hero_image?" + Date.now());
     setHeroImageLogo(api.defaults.baseURL + "/hero_image_logo?" + Date.now());
 
+    // Ambil dari localStorage dulu, jika ada
+    const savedText = localStorage.getItem("textLogoHero");
+    if (savedText) setTextDataLogo(savedText);
+
+    // Ambil dari backend
     api.get("/kirim_text_logo_hero")
-      .then(res => setTextDataLogo(res.data.text || ""))
+      .then(res => {
+        const backendText = res.data.text || "";
+        setTextDataLogo(backendText);
+        localStorage.setItem("textLogoHero", backendText); // update localStorage
+      })
       .catch(() => alert("Gagal ambil text judul"));
   }, []);
 
   return (
     <>
       <div className="Hero" id="Hero">
-        <img
-          className="background"
-          src={heroImage || background}
-          alt="Hero"
-        />
+        <img className="background" src={heroImage || background} alt="Hero" />
         <div className="overlay"></div>
         <div className="img_Gen_z">
           <img src={heroImageLogo || genz} alt="Gen Z" />
